@@ -1,202 +1,171 @@
-FROM ubuntu:22.04@sha256:1b8d8ff4777f36f19bfe73ee4df61e3a0b789caeff29caa019539ec7c9a57f95
-LABEL maintainer="Nicola Corna <nicola@corna.info>"
+FROM ubuntu:22.04@sha256:1b8d8ff4777f36f19bfe73ee4df61e3a0b789f9aa227d3114ebd3fcfdc42b64
 
 # Environment variables
 #######################
 
-ENV MIRROR_DIR=/srv/mirror
-ENV SRC_DIR=/srv/src
-ENV TMP_DIR=/srv/tmp
-ENV CCACHE_DIR=/srv/ccache
-ENV ZIP_DIR=/srv/zips
-ENV LMANIFEST_DIR=/srv/local_manifests
-ENV KEYS_DIR=/srv/keys
-ENV LOGS_DIR=/srv/logs
-ENV USERSCRIPTS_DIR=/srv/userscripts
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV USER=root
-
-# Configurable environment variables
-####################################
-
-# By default we want to use CCACHE, you can disable this
-# WARNING: disabling this may slow down a lot your builds!
-ENV USE_CCACHE=1
-
-# By default we won't include the components from vendor/partner-gms
-ENV WITH_GMS=false
-
-# ccache maximum size. It should be a number followed by an optional suffix: k,
-# M, G, T (decimal), Ki, Mi, Gi or Ti (binary). The default suffix is G. Use 0
-# for no limit.
-ENV CCACHE_SIZE=50G
-
-# We need to specify the ccache binary since it is no longer packaged along with AOSP
-ENV CCACHE_EXEC=/usr/bin/ccache
-
-# Environment for the LineageOS branches name
-# See https://github.com/LineageOS/android/branches for possible options
-ENV BRANCH_NAME='lineage-22.1'
-
-# Environment for the device list (separate by comma if more than one)
-# eg. DEVICE_LIST=axolotl,barbet,beckham
+ENV MIRROR_DIR='/srv/mirror'
+ENV SRC_DIR='/srv/src'
+ENV ZIP_DIR='/srv/zips'
+ENV LOGS_DIR='/srv/logs'
+ENV KEYS_DIR='/srv/keys'
+ENV CCACHE_DIR='/srv/ccache'
+ENV USERSCRIPTS_DIR='/srv/userscripts'
+ENV LMANIFEST_DIR='/srv/local_manifests'
+ENV CERTIFICATE_SUBJECT='/CN=android/'
 ENV DEVICE_LIST=''
-
-# Release type string
-ENV RELEASE_TYPE='UNOFFICIAL'
-
-# OTA URL that will be used inside CMUpdater
-# Use this in combination with LineageOTA to make sure your device can auto-update itself from this buildbot
-ENV OTA_URL=''
-
-# User identity
-ENV USER_NAME='LineageOS Buildbot'
-ENV USER_MAIL='lineageos-buildbot@docker.host'
-
-# Include proprietary files, downloaded automatically from github.com/TheMuppets/ and gitlab.com/the-muppets/
-# Only some branches are supported
-ENV INCLUDE_PROPRIETARY=true
-
-# Mount an overlay filesystem over the source dir to do each build on a clean source
-ENV BUILD_OVERLAY=false
-
-# Clone the full LineageOS mirror (> 200 GB)
-ENV LOCAL_MIRROR=false
-
-# If you want to preserve old ZIPs set this to 'false'
-ENV CLEAN_OUTDIR=false
-
-# Change this cron rule to what fits best for you
-# Use 'now' to start the build immediately
-# For example, '0 10 * * *' means 'Every day at 10:00 UTC'
-ENV CRONTAB_TIME='now'
-
-# Clean artifacts output after each build
-ENV CLEAN_AFTER_BUILD=true
-
-# Provide root capabilities builtin inside the ROM (see http://lineageos.org/Update-and-Build-Prep/)
-ENV WITH_SU=false
-
-# Provide a default JACK configuration in order to avoid out-of-memory issues
-ENV ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx4G"
-
-# Custom packages to be installed
-ENV CUSTOM_PACKAGES=''
-
-# Sign the builds with the keys in $KEYS_DIR
 ENV SIGN_BUILDS=false
-
-# When SIGN_BUILDS = true but no keys have been provided, generate a new set with this subject
-ENV KEYS_SUBJECT='/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
-
-# Move the resulting zips to $ZIP_DIR/$codename instead of $ZIP_DIR/
+ENV CRONTAB_TIME='now'
 ENV ZIP_SUBDIR=true
-
-# Write the verbose logs to $LOGS_DIR/$codename instead of $LOGS_DIR/
 ENV LOGS_SUBDIR=true
-
-# Apply the MicroG's signature spoofing patch
-# Valid values are "no", "yes" (for the original MicroG's patch) and
-# "restricted" (to grant the permission only to the system privileged apps).
-#
-# The original ("yes") patch allows user apps to gain the ability to spoof
-# themselves as other apps, which can be a major security threat. Using the
-# restricted patch and embedding the apps that requires it as system privileged
-# apps is a much secure option. See the README.md ("Custom mode") for an
-# example.
-#
-# LineageOS versions 18.1, 19.1, 20.0 and 21.0 and up include built-in
-# signature spoofing for microG, and custom patches are not required. They may
-# still, however, optionally be enabled
-ENV SIGNATURE_SPOOFING="no"
-
-# Enable the built-in signature spoofing for the user build type, not just
-# userdebug and eng
-ENV USER_BUILD_SPOOFING="no"
-
-# Delete old zips in $ZIP_DIR, keep only the N latest one (0 to disable)
 ENV DELETE_OLD_ZIPS=0
-
-# Delete old logs in $LOGS_DIR, keep only the N latest one (0 to disable)
 ENV DELETE_OLD_LOGS=0
-
-# build type of your builds (user|userdebug|eng)
-ENV BUILD_TYPE="userdebug"
-
-# we can use --depth=1 here
-ENV REPO_INIT_ARGS=""
-
-# You can specify the number of retries for repo sync here. This is useful if you get connection errors during repo sync. The value will be directly forwarded to the repo command
-# Default: unset; repo uses default retry mechanism
-# Allowed values: positive, non-null integers
-ENV RETRY_FETCHES=
-
-
-# variables to control whether or not tasks are implemented
+ENV CLEAN_OUTDIR=false
+ENV CLEAN_AFTER_BUILD=true
+ENV WITH_GMS=false
+ENV OTA_URL=''
+ENV BUILD_TYPE='userdebug'
+ENV RELEASE_TYPE='UNOFFICIAL'
+ENV SIGNATURE_SPOOFING='no'
+ENV SIGNATURE_SPOOFING_FORCE=false
+ENV CUSTOM_PACKAGES=''
+ENV DEBUG=false
+ENV USE_CCACHE=1
+ENV CCACHE_SIZE='50G'
+ENV PARALLEL_JOBS=0
+ENV RETRY_FETCHES=0
+ENV LOCAL_MIRROR=false
 ENV INIT_MIRROR=true
 ENV SYNC_MIRROR=true
+ENV SYNC_MIRROR_MAIN=false
+ENV INCLUDE_PROPRIETARY=false
+ENV APPLY_PI_PATCH=true
 ENV RESET_VENDOR_UNDO_PATCHES=true
 ENV CALL_REPO_INIT=true
 ENV CALL_REPO_SYNC=true
-ENV CALL_GIT_LFS_PULL=false
-ENV APPLY_PATCHES=true
+ENV CALL_GIT_LFS_PULL=true
 ENV PREPARE_BUILD_ENVIRONMENT=true
 ENV CALL_BREAKFAST=true
 ENV CALL_MKA=true
-ENV ZIP_UP_IMAGES=false
-ENV MAKE_IMG_ZIP_FILE=false
-ENV APPLY_PI_PATCH=true
+ENV USER_NAME='Docker CI'
+ENV USER_MAIL='noreply@example.com'
+ENV BRANCH_NAME='lineage-23.0'
 
-# You can optionally specify a USERSCRIPTS_DIR volume containing these scripts:
-#  * begin.sh, run at the very beginning
-#  * before.sh, run after the syncing and patching, before starting the builds
-#  * pre-build.sh, run before the build of every device
-#  * post-build.sh, run after the build of every device
-#  * end.sh, run at the very end
-# Each script will be run in $SRC_DIR and must be owned and writeable only by
-# root
+# Manifest URL for the ROM (AxionAOSP by default)
+ENV MANIFEST_URL='https://github.com/AxionAOSP/android.git'
 
-# Create Volume entry points
-############################
-VOLUME $MIRROR_DIR
-VOLUME $SRC_DIR
-VOLUME $TMP_DIR
-VOLUME $CCACHE_DIR
-VOLUME $ZIP_DIR
-VOLUME $LMANIFEST_DIR
-VOLUME $KEYS_DIR
-VOLUME $LOGS_DIR
-VOLUME $USERSCRIPTS_DIR
+# Vendor dir name used for overlays/config (axion by default; will fall back to lineage if missing)
+ENV ROM_VENDOR='axion'
 
-# Create missing directories
-############################
-RUN mkdir -p $MIRROR_DIR $SRC_DIR $TMP_DIR $CCACHE_DIR $ZIP_DIR $LMANIFEST_DIR \
-      $KEYS_DIR $LOGS_DIR $USERSCRIPTS_DIR
+ENV USER=root
 
-# Install build dependencies
-############################
-RUN apt-get -qq update && \
-      apt-get install -y bc bison bsdmainutils build-essential ccache cgpt clang \
-      cron curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
-      kmod lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool \
-      libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 \
-      libxml2-utils lsof lzop maven openjdk-8-jdk pngcrush procps python3 \
-      python-is-python3 rsync schedtool squashfs-tools wget xdelta3 xsltproc yasm zip \
-      zlib1g-dev \
-      && rm -rf /var/lib/apt/lists/*
+# Prefer Java 17 for modern Android builds
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
 
-RUN curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo && \
-      chmod a+x /usr/local/bin/repo
+# This fixes some issues with terminal colors
+ENV TERM=xterm-256color
 
-# Re-enable TLSv1 and TLSv1.1 in OpenJDK 8 config
-#(for cm-14.1/lineage-15.1, might be removed later)
-###################################################
-RUN echo "jdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, DH keySize < 1024, EC keySize < 224, 3DES_EDE_CBC, anon, NULL, include jdk.disabled.namedCurves" | tee -a /etc/java-8-openjdk/security/java.security
+# Setup the sources list
+#########################
+RUN apt-get update && apt-get install -y \
+  apt-utils \
+  software-properties-common \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy required files
+# Install dependencies
+#######################
+RUN apt-get update && apt-get install -y \
+  bc \
+  bison \
+  build-essential \
+  ccache \
+  curl \
+  flex \
+  g++-multilib \
+  gcc-multilib \
+  git \
+  git-lfs \
+  gnupg \
+  gperf \
+  imagemagick \
+  lib32ncurses5-dev \
+  lib32readline-dev \
+  lib32z1-dev \
+  libgl1-mesa-dev \
+  liblz4-tool \
+  libncurses5 \
+  libncurses5-dev \
+  libsdl1.2-dev \
+  libssl-dev \
+  libxml2 \
+  libxml2-utils \
+  lzop \
+  maven \
+  openjdk-17-jdk \
+  pngcrush \
+  python3 \
+  rsync \
+  schedtool \
+  squashfs-tools \
+  unzip \
+  wget \
+  x11proto-core-dev \
+  xsltproc \
+  zip \
+  zlib1g-dev \
+  sudo \
+  python-is-python3 \
+  nano \
+  vim \
+  zstd \
+  file \
+  && rm -rf /var/lib/apt/lists/*
+
+# Make /bin/sh symlink to bash instead of dash:
+RUN echo "dash dash/sh boolean false" | debconf-set-selections
+RUN DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
+# Install repo tool
 #####################
-COPY src/ /root/
+RUN curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo && chmod a+x /usr/local/bin/repo
+
+# Add a user named "android" and make it a sudoer
+##############################################
+RUN useradd -m -G sudo -s /bin/bash android && \
+    echo "android ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set up build environment
+###########################
+RUN mkdir -p \
+    $MIRROR_DIR \
+    $SRC_DIR \
+    $ZIP_DIR \
+    $LOGS_DIR \
+    $KEYS_DIR \
+    $CCACHE_DIR \
+    $USERSCRIPTS_DIR \
+    $LMANIFEST_DIR
+
+# Add the init scripts
+#######################
+COPY src/init.sh /root/init.sh
+COPY src/new_build.sh /root/new_build.sh
+COPY src/legacy-build.sh /root/legacy-build.sh
+COPY src/build_manifest.py /root/build_manifest.py
+COPY src/clean_up.py /root/clean_up.py
+COPY src/make_key /root/make_key
+COPY src/packages_updater_strings.xml /root/packages_updater_strings.xml
+
+# apt preferences
+COPY apt_preferences /etc/apt/preferences.d/99-apt_preferences
+
+# Set execute permissions
+#########################
+RUN chmod +x /root/init.sh /root/new_build.sh /root/legacy-build.sh /root/make_key
+
+# Enable git-lfs
+#################
+RUN git lfs install --system
 
 # Set the work directory
 ########################
