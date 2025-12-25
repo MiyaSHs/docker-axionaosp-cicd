@@ -1,6 +1,6 @@
 # docker-axionaosp-cicd
 
-Docker microservice for AxionAOSP Continuous Integration and Continuous Deployment (NOT WORKING, JUST TRYING TO MAKE IT POSSIBLE)
+Docker microservice for AxionAOSP Continuous Integration and Continuous Deployment (HAVENT TESTED, BUT I DID CHANGE ALOT OF CODE)
 
 See [the wiki in this repo](https://github.com/lineageos4microg/docker-lineage-cicd/wiki) for updated documentation on this Docker image.
 
