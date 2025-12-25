@@ -1,4 +1,4 @@
-FROM ubuntu:22.04@sha256:1b8d8ff4777f36f19bfe73ee4df61e3a0b789f9aa227d3114ebd3fcfdc42b64
+FROM ubuntu:22.04
 
 # Environment variables
 #######################
