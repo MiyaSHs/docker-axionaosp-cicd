@@ -491,11 +491,25 @@ for codename in ${devices//,/ }; do
 
         cd out/target/product/"$codename"
         files_to_hash=()
-        for build in $(ls -1t *.zip 2>/dev/null | grep -Ev "(target_files|ota|symbol|img|fastboot)" || true); do
+                cd out/target/product/"$codename"
+        files_to_hash=()
+
+        # ShellCheck-safe zip handling (no parsing ls output; handles filenames starting with "-")
+        shopt -s nullglob
+        zip_candidates=( ./*.zip )
+        shopt -u nullglob
+
+        for build_path in "${zip_candidates[@]}"; do
+          build="${build_path#./}"
+          case "$build" in
+            *target_files*|*ota*|*symbol*|*img*|*fastboot*) continue ;;
+          esac
+
           if [ -f system/build.prop ]; then
             cp -v system/build.prop "$ZIP_DIR/$zipsubdir/$build.prop" &>> "$DEBUG_LOG"
           fi
-          mv "$build" "$ZIP_DIR/$zipsubdir/" &>> "$DEBUG_LOG"
+
+          mv "$build_path" "$ZIP_DIR/$zipsubdir/" &>> "$DEBUG_LOG"
           files_to_hash+=( "$build" )
         done
 
