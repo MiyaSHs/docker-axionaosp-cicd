@@ -3,12 +3,13 @@ name: Docker
 on:
   push:
   pull_request:
-  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  # Push to Docker Hub under your account, not the GitHub repo owner
+  # - If DOCKERHUB_USERNAME secret exists, use that (awoeeq)
+  # - Otherwise fall back to GitHub repo owner (mainly for PR builds where secrets may be absent)
+  IMAGE_NAME: ${{ (secrets.DOCKERHUB_USERNAME || github.repository_owner) }}/docker-axionaosp-cicd
 
 jobs:
   build:
